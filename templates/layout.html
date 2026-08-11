@@ -1,0 +1,30 @@
+{{define "layout"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>immich-auto-albums</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <style>
+        .rule-row { border-bottom: 1px solid var(--pico-muted-border-color); padding: 1rem 0; }
+        .rule-row:last-child { border-bottom: none; }
+        .rule-meta { font-size: 0.85em; color: var(--pico-muted-color); }
+        .rule-actions { display: flex; gap: 0.5rem; }
+        .rule-actions button, .rule-actions a { font-size: 0.85em; padding: 0.25rem 0.5rem; }
+        .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 1rem; font-size: 0.8em; }
+        .badge-on { background: var(--pico-primary-background); color: var(--pico-primary-inverse); }
+        .badge-off { background: var(--pico-muted-border-color); color: var(--pico-muted-color); }
+        #rule-form-container { margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+<main class="container">
+    <nav>
+        <ul><li><strong>immich-auto-albums</strong></li></ul>
+        <ul><li><a href="/" hx-get="/" hx-target="body">Rules</a></li></ul>
+    </nav>
+    {{template "content" .}}
+</main>
+</body>
+</html>{{end}}

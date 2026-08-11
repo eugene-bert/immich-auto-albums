@@ -1,0 +1,21 @@
+{{define "rule-row"}}
+<div class="rule-row" id="rule-{{.ID}}">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            {{if .Enabled}}<span class="badge badge-on">ON</span>{{else}}<span class="badge badge-off">OFF</span>{{end}}
+            <strong>{{.Name}}</strong>
+            <span class="rule-meta">{{.FilterSummary}}</span>
+            <span class="badge" style="margin-left:0.5rem;">{{.TotalCount}} assets</span>
+        </div>
+        <div class="rule-actions">
+            <button hx-post="/rules/{{.ID}}/sync" hx-target="#rule-{{.ID}}" hx-swap="outerHTML" hx-indicator="#sync-spinner-{{.ID}}">Sync</button>
+            <button hx-get="/rules/{{.ID}}/edit" hx-target="#rule-form-container" hx-swap="innerHTML" class="secondary">Edit</button>
+            <button hx-delete="/rules/{{.ID}}" hx-target="#rule-{{.ID}}" hx-swap="outerHTML" hx-confirm="Delete rule '{{.Name}}'?" class="secondary outline">Delete</button>
+        </div>
+    </div>
+    <div class="rule-meta">
+        synced {{.LastSyncAgo}} · album: {{.AlbumName}} · every {{.Interval}}s
+        <span id="sync-spinner-{{.ID}}" class="htmx-indicator"> syncing...</span>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,16 @@
+services:
+  immich-auto-albums:
+    build: .
+    container_name: immich-auto-albums
+    restart: unless-stopped
+    ports:
+      - "8095:8095"
+    env_file: .env
+    volumes:
+      - ./data:/data
+    networks:
+      - immich_default
+
+networks:
+  immich_default:
+    external: true
