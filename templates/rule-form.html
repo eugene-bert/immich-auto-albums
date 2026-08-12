@@ -2,32 +2,50 @@
 <article>
     <header>
         <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>{{if .ID}}Edit Rule{{else}}New Rule{{end}}</strong>
+            <strong>{{if .Rule.ID}}Edit Rule{{else}}New Rule{{end}}</strong>
             <button class="secondary outline" onclick="document.getElementById('rule-form-container').innerHTML=''">&times;</button>
         </div>
     </header>
-    <form {{if .ID}}hx-put="/rules/{{.ID}}"{{else}}hx-post="/rules"{{end}}
-          hx-target="{{if .ID}}#rule-{{.ID}}{{else}}#rules-list{{end}}"
-          hx-swap="{{if .ID}}outerHTML{{else}}beforeend{{end}}"
+    <form {{if .Rule.ID}}hx-put="/rules/{{.Rule.ID}}"{{else}}hx-post="/rules"{{end}}
+          hx-target="{{if .Rule.ID}}#rule-{{.Rule.ID}}{{else}}#rules-list{{end}}"
+          hx-swap="{{if .Rule.ID}}outerHTML{{else}}beforeend{{end}}"
           hx-on::after-request="document.getElementById('rule-form-container').innerHTML=''">
         <div class="grid">
-            <label>Name <input type="text" name="name" value="{{.Name}}" required></label>
-            <label>Album Name <input type="text" name="album_name" value="{{.AlbumName}}" required></label>
+            <label>Name <input type="text" name="name" value="{{.Rule.Name}}" required></label>
+            <label>Album Name
+                    <input type="text" name="album_name" value="{{.Rule.AlbumName}}" list="albums" required placeholder="existing or new">
+                    <datalist id="albums">{{range .Explore.AlbumNames}}<option value="{{.}}">{{end}}</datalist>
+                </label>
         </div>
-        <details>
+        <details open>
             <summary>Camera Filters</summary>
             <div class="grid">
-                <label>Camera Make <input type="text" name="camera_make" value="{{.CameraMake}}" placeholder="e.g. FUJIFILM"></label>
-                <label>Camera Model <input type="text" name="camera_model" value="{{.CameraModel}}" placeholder="e.g. X-E5"></label>
-                <label>Lens Model <input type="text" name="lens_model" value="{{.LensModel}}" placeholder="e.g. XF23mmF1.4"></label>
+                <label>Camera Make
+                    <input type="text" name="camera_make" value="{{.Rule.CameraMake}}" list="makes" placeholder="e.g. FUJIFILM">
+                    <datalist id="makes">{{range .Explore.CameraMakes}}<option value="{{.}}">{{end}}</datalist>
+                </label>
+                <label>Camera Model
+                    <input type="text" name="camera_model" value="{{.Rule.CameraModel}}" list="models" placeholder="e.g. X-E5">
+                    <datalist id="models">{{range .Explore.CameraModels}}<option value="{{.}}">{{end}}</datalist>
+                </label>
+                <label>Lens Model <input type="text" name="lens_model" value="{{.Rule.LensModel}}" placeholder="e.g. XF23mmF1.4"></label>
             </div>
         </details>
         <details>
             <summary>Location Filters</summary>
             <div class="grid">
-                <label>City <input type="text" name="city" value="{{.City}}"></label>
-                <label>State <input type="text" name="state" value="{{.State}}"></label>
-                <label>Country <input type="text" name="country" value="{{.Country}}"></label>
+                <label>City
+                    <input type="text" name="city" value="{{.Rule.City}}" list="cities">
+                    <datalist id="cities">{{range .Explore.Cities}}<option value="{{.}}">{{end}}</datalist>
+                </label>
+                <label>State
+                    <input type="text" name="state" value="{{.Rule.State}}" list="states">
+                    <datalist id="states">{{range .Explore.States}}<option value="{{.}}">{{end}}</datalist>
+                </label>
+                <label>Country
+                    <input type="text" name="country" value="{{.Rule.Country}}" list="countries">
+                    <datalist id="countries">{{range .Explore.Countries}}<option value="{{.}}">{{end}}</datalist>
+                </label>
             </div>
         </details>
         <details>
@@ -35,23 +53,23 @@
             <div class="grid">
                 <label>Media Type
                     <select name="media_type">
-                        <option value="" {{if eq .MediaType ""}}selected{{end}}>All</option>
-                        <option value="IMAGE" {{if eq .MediaType "IMAGE"}}selected{{end}}>Images</option>
-                        <option value="VIDEO" {{if eq .MediaType "VIDEO"}}selected{{end}}>Videos</option>
+                        <option value="" {{if eq .Rule.MediaType ""}}selected{{end}}>All</option>
+                        <option value="IMAGE" {{if eq .Rule.MediaType "IMAGE"}}selected{{end}}>Images</option>
+                        <option value="VIDEO" {{if eq .Rule.MediaType "VIDEO"}}selected{{end}}>Videos</option>
                     </select>
                 </label>
-                <label>Taken After <input type="date" name="taken_after" value="{{.TakenAfter}}"></label>
-                <label>Taken Before <input type="date" name="taken_before" value="{{.TakenBefore}}"></label>
+                <label>Taken After <input type="date" name="taken_after" value="{{.Rule.TakenAfter}}"></label>
+                <label>Taken Before <input type="date" name="taken_before" value="{{.Rule.TakenBefore}}"></label>
             </div>
         </details>
         <div class="grid">
-            <label>Sync Interval (seconds) <input type="number" name="interval" value="{{if .Interval}}{{.Interval}}{{else}}3600{{end}}" min="60"></label>
+            <label>Sync Interval (seconds) <input type="number" name="interval" value="{{if .Rule.Interval}}{{.Rule.Interval}}{{else}}3600{{end}}" min="60"></label>
             <label>
-                <input type="checkbox" name="enabled" value="1" {{if or (not .ID) .Enabled}}checked{{end}}>
+                <input type="checkbox" name="enabled" value="1" {{if or (not .Rule.ID) .Rule.Enabled}}checked{{end}}>
                 Enabled
             </label>
         </div>
-        <button type="submit">{{if .ID}}Update{{else}}Create{{end}}</button>
+        <button type="submit">{{if .Rule.ID}}Update{{else}}Create{{end}}</button>
     </form>
 </article>
 {{end}}

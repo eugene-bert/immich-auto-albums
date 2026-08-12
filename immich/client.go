@@ -155,6 +155,76 @@ func (c *Client) GetAlbumAssetIDs(albumID string) (map[string]bool, error) {
 	return ids, nil
 }
 
+func (c *Client) Ping() error {
+	_, err := c.do("GET", "/api/server/ping", nil)
+	return err
+}
+
+type ExploreField struct {
+	FieldName string        `json:"fieldName"`
+	Values    []FieldValue  `json:"values"`
+}
+
+type FieldValue struct {
+	Value string `json:"value"`
+	Count int    `json:"data"`
+}
+
+type ExploreData struct {
+	CameraMakes  []string
+	CameraModels []string
+	Cities       []string
+	States       []string
+	Countries    []string
+	AlbumNames   []string
+}
+
+func (c *Client) Explore() (ExploreData, error) {
+	data, err := c.do("GET", "/api/search/explore", nil)
+	if err != nil {
+		return ExploreData{}, err
+	}
+	var fields []ExploreField
+	json.Unmarshal(data, &fields)
+
+	var result ExploreData
+	for _, f := range fields {
+		vals := make([]string, 0, len(f.Values))
+		for _, v := range f.Values {
+			if v.Value != "" {
+				vals = append(vals, v.Value)
+			}
+		}
+		switch f.FieldName {
+		case "exifInfo.make":
+			result.CameraMakes = vals
+		case "exifInfo.model":
+			result.CameraModels = vals
+		case "exifInfo.city":
+			result.Cities = vals
+		case "exifInfo.state":
+			result.States = vals
+		case "exifInfo.country":
+			result.Countries = vals
+		}
+	}
+	return result, nil
+}
+
+func (c *Client) ListAlbumNames() ([]string, error) {
+	data, err := c.do("GET", "/api/albums", nil)
+	if err != nil {
+		return nil, err
+	}
+	var albums []albumResponse
+	json.Unmarshal(data, &albums)
+	names := make([]string, 0, len(albums))
+	for _, a := range albums {
+		names = append(names, a.Name)
+	}
+	return names, nil
+}
+
 func (c *Client) AddAssetsToAlbum(albumID string, assetIDs []string) error {
 	for i := 0; i < len(assetIDs); i += 500 {
 		end := i + 500

@@ -48,11 +48,14 @@ func main() {
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		list, _ := store.List()
-		tmpl.ExecuteTemplate(w, "layout", map[string]any{"Rules": list})
+		connected := client.Ping() == nil
+		tmpl.ExecuteTemplate(w, "layout", map[string]any{"Rules": list, "Connected": connected})
 	})
 
 	mux.HandleFunc("GET /rules/new", func(w http.ResponseWriter, r *http.Request) {
-		tmpl.ExecuteTemplate(w, "rule-form", rules.Rule{})
+		explore, _ := client.Explore()
+		explore.AlbumNames, _ = client.ListAlbumNames()
+		tmpl.ExecuteTemplate(w, "rule-form", map[string]any{"Rule": rules.Rule{}, "Explore": explore})
 	})
 
 	mux.HandleFunc("POST /rules", func(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +74,9 @@ func main() {
 			http.Error(w, "not found", 404)
 			return
 		}
-		tmpl.ExecuteTemplate(w, "rule-form", rule)
+		explore, _ := client.Explore()
+		explore.AlbumNames, _ = client.ListAlbumNames()
+		tmpl.ExecuteTemplate(w, "rule-form", map[string]any{"Rule": rule, "Explore": explore})
 	})
 
 	mux.HandleFunc("PUT /rules/{id}", func(w http.ResponseWriter, r *http.Request) {

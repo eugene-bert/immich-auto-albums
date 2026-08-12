@@ -1,7 +1,12 @@
 {{define "content"}}
+{{if not .Connected}}
+<article style="background:var(--pico-del-color);color:white;padding:0.75rem 1rem;margin-bottom:1rem;">
+    Immich server unreachable. Check IMMICH_URL and IMMICH_API_KEY.
+</article>
+{{end}}
 <div style="display:flex;justify-content:space-between;align-items:center;">
     <h2>Rules</h2>
-    <button hx-get="/rules/new" hx-target="#rule-form-container" hx-swap="innerHTML">+ New Rule</button>
+    <button hx-get="/rules/new" hx-target="#rule-form-container" hx-swap="innerHTML" {{if not .Connected}}disabled{{end}}>+ New Rule</button>
 </div>
 <div id="rule-form-container"></div>
 <div id="rules-list">
