@@ -19,9 +19,11 @@ type Rule struct {
 	City        string
 	State       string
 	Country     string
-	TakenAfter  string
-	TakenBefore string
-	Interval    int
+	TakenAfter       string
+	TakenBefore      string
+	OriginalFileName string
+	Description      string
+	Interval         int
 	Enabled     bool
 	LastSync    time.Time
 	LastCount   int
@@ -54,6 +56,12 @@ func (r Rule) FilterSummary() string {
 	}
 	if r.TakenBefore != "" {
 		parts = append(parts, "before:"+r.TakenBefore)
+	}
+	if r.OriginalFileName != "" {
+		parts = append(parts, "file:"+r.OriginalFileName)
+	}
+	if r.Description != "" {
+		parts = append(parts, "desc:"+r.Description)
 	}
 	if len(parts) == 0 {
 		return "no filters"
@@ -104,6 +112,8 @@ func Open(path string) (*Store, error) {
 		country TEXT DEFAULT '',
 		taken_after TEXT DEFAULT '',
 		taken_before TEXT DEFAULT '',
+		original_file_name TEXT DEFAULT '',
+		description TEXT DEFAULT '',
 		interval_sec INTEGER DEFAULT 3600,
 		enabled INTEGER DEFAULT 1,
 		last_sync DATETIME,
@@ -119,6 +129,7 @@ func Open(path string) (*Store, error) {
 func (s *Store) List() ([]Rule, error) {
 	rows, err := s.db.Query(`SELECT id, name, album_name, camera_make, camera_model,
 		lens_model, media_type, city, state, country, taken_after, taken_before,
+		COALESCE(original_file_name,''), COALESCE(description,''),
 		interval_sec, enabled, COALESCE(last_sync,''), last_count, total_count, created_at
 		FROM rules ORDER BY name`)
 	if err != nil {
@@ -132,7 +143,8 @@ func (s *Store) List() ([]Rule, error) {
 		var lastSync, createdAt string
 		err := rows.Scan(&r.ID, &r.Name, &r.AlbumName, &r.CameraMake, &r.CameraModel,
 			&r.LensModel, &r.MediaType, &r.City, &r.State, &r.Country,
-			&r.TakenAfter, &r.TakenBefore, &r.Interval, &r.Enabled,
+			&r.TakenAfter, &r.TakenBefore, &r.OriginalFileName, &r.Description,
+			&r.Interval, &r.Enabled,
 			&lastSync, &r.LastCount, &r.TotalCount, &createdAt)
 		if err != nil {
 			return nil, err
@@ -149,10 +161,12 @@ func (s *Store) Get(id int64) (Rule, error) {
 	var lastSync, createdAt string
 	err := s.db.QueryRow(`SELECT id, name, album_name, camera_make, camera_model,
 		lens_model, media_type, city, state, country, taken_after, taken_before,
+		COALESCE(original_file_name,''), COALESCE(description,''),
 		interval_sec, enabled, COALESCE(last_sync,''), last_count, total_count, created_at
 		FROM rules WHERE id = ?`, id).Scan(&r.ID, &r.Name, &r.AlbumName, &r.CameraMake,
 		&r.CameraModel, &r.LensModel, &r.MediaType, &r.City, &r.State, &r.Country,
-		&r.TakenAfter, &r.TakenBefore, &r.Interval, &r.Enabled,
+		&r.TakenAfter, &r.TakenBefore, &r.OriginalFileName, &r.Description,
+		&r.Interval, &r.Enabled,
 		&lastSync, &r.LastCount, &r.TotalCount, &createdAt)
 	r.LastSync, _ = time.Parse(time.RFC3339, lastSync)
 	r.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
@@ -161,10 +175,12 @@ func (s *Store) Get(id int64) (Rule, error) {
 
 func (s *Store) Create(r *Rule) error {
 	res, err := s.db.Exec(`INSERT INTO rules (name, album_name, camera_make, camera_model,
-		lens_model, media_type, city, state, country, taken_after, taken_before, interval_sec, enabled)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		lens_model, media_type, city, state, country, taken_after, taken_before,
+		original_file_name, description, interval_sec, enabled)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		r.Name, r.AlbumName, r.CameraMake, r.CameraModel, r.LensModel, r.MediaType,
-		r.City, r.State, r.Country, r.TakenAfter, r.TakenBefore, r.Interval, r.Enabled)
+		r.City, r.State, r.Country, r.TakenAfter, r.TakenBefore,
+		r.OriginalFileName, r.Description, r.Interval, r.Enabled)
 	if err != nil {
 		return err
 	}
@@ -175,9 +191,10 @@ func (s *Store) Create(r *Rule) error {
 func (s *Store) Update(r *Rule) error {
 	_, err := s.db.Exec(`UPDATE rules SET name=?, album_name=?, camera_make=?, camera_model=?,
 		lens_model=?, media_type=?, city=?, state=?, country=?, taken_after=?, taken_before=?,
-		interval_sec=?, enabled=? WHERE id=?`,
+		original_file_name=?, description=?, interval_sec=?, enabled=? WHERE id=?`,
 		r.Name, r.AlbumName, r.CameraMake, r.CameraModel, r.LensModel, r.MediaType,
-		r.City, r.State, r.Country, r.TakenAfter, r.TakenBefore, r.Interval, r.Enabled, r.ID)
+		r.City, r.State, r.Country, r.TakenAfter, r.TakenBefore,
+		r.OriginalFileName, r.Description, r.Interval, r.Enabled, r.ID)
 	return err
 }
 

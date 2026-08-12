@@ -132,9 +132,11 @@ func parseForm(r *http.Request) rules.Rule {
 		City:        r.FormValue("city"),
 		State:       r.FormValue("state"),
 		Country:     r.FormValue("country"),
-		TakenAfter:  r.FormValue("taken_after"),
-		TakenBefore: r.FormValue("taken_before"),
-		Interval:    interval,
+		TakenAfter:       r.FormValue("taken_after"),
+		TakenBefore:      r.FormValue("taken_before"),
+		OriginalFileName: r.FormValue("original_file_name"),
+		Description:      r.FormValue("description"),
+		Interval:         interval,
 		Enabled:     r.FormValue("enabled") == "1",
 	}
 }

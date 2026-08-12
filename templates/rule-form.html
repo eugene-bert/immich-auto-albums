@@ -61,6 +61,10 @@
                 <label>Taken After <input type="date" name="taken_after" value="{{.Rule.TakenAfter}}"></label>
                 <label>Taken Before <input type="date" name="taken_before" value="{{.Rule.TakenBefore}}"></label>
             </div>
+            <div class="grid">
+                <label>Original Filename (contains) <input type="text" name="original_file_name" value="{{.Rule.OriginalFileName}}" placeholder="e.g. bambu-a1"></label>
+                <label>Description (contains) <input type="text" name="description" value="{{.Rule.Description}}" placeholder="e.g. 3D print"></label>
+            </div>
         </details>
         <div class="grid">
             <label>Sync Interval (seconds) <input type="number" name="interval" value="{{if .Rule.Interval}}{{.Rule.Interval}}{{else}}3600{{end}}" min="60"></label>

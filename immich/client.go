@@ -89,6 +89,12 @@ func (c *Client) SearchMetadata(rule rules.Rule) ([]string, error) {
 	if rule.TakenBefore != "" {
 		filters["takenBefore"] = rule.TakenBefore
 	}
+	if rule.OriginalFileName != "" {
+		filters["originalFileName"] = rule.OriginalFileName
+	}
+	if rule.Description != "" {
+		filters["description"] = rule.Description
+	}
 
 	var allIDs []string
 	page := 1
