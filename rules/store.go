@@ -123,6 +123,9 @@ func Open(path string) (*Store, error) {
 	)`); err != nil {
 		return nil, err
 	}
+	for _, col := range []string{"original_file_name", "description"} {
+		db.Exec(`ALTER TABLE rules ADD COLUMN ` + col + ` TEXT DEFAULT ''`)
+	}
 	return &Store{db: db}, nil
 }
 
