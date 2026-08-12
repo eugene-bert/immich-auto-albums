@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/eugene-bert/immich-auto-albums/rules"
 )
@@ -17,8 +19,8 @@ type Client struct {
 
 type searchResponse struct {
 	Assets struct {
-		Items    []asset `json:"items"`
-		NextPage *int    `json:"nextPage"`
+		Items    []asset          `json:"items"`
+		NextPage *json.RawMessage `json:"nextPage"`
 	} `json:"assets"`
 }
 
@@ -111,7 +113,13 @@ func (c *Client) SearchMetadata(rule rules.Rule) ([]string, error) {
 		if resp.Assets.NextPage == nil {
 			break
 		}
-		page = *resp.Assets.NextPage
+		raw := string(*resp.Assets.NextPage)
+		raw = strings.Trim(raw, "\"")
+		next, err := strconv.Atoi(raw)
+		if err != nil {
+			break
+		}
+		page = next
 	}
 	return allIDs, nil
 }
