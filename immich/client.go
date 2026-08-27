@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/eugene-bert/immich-auto-albums/rules"
 )
@@ -15,6 +16,16 @@ import (
 type Client struct {
 	URL    string
 	APIKey string
+	HTTP   *http.Client
+}
+
+var defaultHTTP = &http.Client{Timeout: 30 * time.Second}
+
+func (c *Client) httpClient() *http.Client {
+	if c.HTTP != nil {
+		return c.HTTP
+	}
+	return defaultHTTP
 }
 
 type searchResponse struct {
@@ -29,18 +40,21 @@ type asset struct {
 }
 
 type albumResponse struct {
-	ID      string  `json:"id"`
-	Name    string  `json:"albumName"`
-	Assets  []asset `json:"assets"`
+	ID     string  `json:"id"`
+	Name   string  `json:"albumName"`
+	Assets []asset `json:"assets"`
 }
 
 func (c *Client) do(method, path string, body any) ([]byte, error) {
 	var r io.Reader
 	if body != nil {
-		b, _ := json.Marshal(body)
+		b, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
 		r = bytes.NewReader(b)
 	}
-	req, err := http.NewRequest(method, c.URL+path, r)
+	req, err := http.NewRequest(method, strings.TrimRight(c.URL, "/")+path, r)
 	if err != nil {
 		return nil, err
 	}
@@ -48,12 +62,15 @@ func (c *Client) do(method, path string, body any) ([]byte, error) {
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.httpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	data, _ := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(data))
 	}
@@ -136,7 +153,9 @@ func (c *Client) FindAlbum(name string) (string, error) {
 		return "", err
 	}
 	var albums []albumResponse
-	json.Unmarshal(data, &albums)
+	if err := json.Unmarshal(data, &albums); err != nil {
+		return "", fmt.Errorf("parse albums: %w", err)
+	}
 	for _, a := range albums {
 		if a.Name == name {
 			return a.ID, nil
@@ -151,7 +170,9 @@ func (c *Client) CreateAlbum(name string) (string, error) {
 		return "", err
 	}
 	var a albumResponse
-	json.Unmarshal(data, &a)
+	if err := json.Unmarshal(data, &a); err != nil {
+		return "", fmt.Errorf("parse album: %w", err)
+	}
 	return a.ID, nil
 }
 
@@ -161,7 +182,9 @@ func (c *Client) GetAlbumAssetIDs(albumID string) (map[string]bool, error) {
 		return nil, err
 	}
 	var a albumResponse
-	json.Unmarshal(data, &a)
+	if err := json.Unmarshal(data, &a); err != nil {
+		return nil, fmt.Errorf("parse album: %w", err)
+	}
 	ids := make(map[string]bool, len(a.Assets))
 	for _, asset := range a.Assets {
 		ids[asset.ID] = true
@@ -170,13 +193,13 @@ func (c *Client) GetAlbumAssetIDs(albumID string) (map[string]bool, error) {
 }
 
 func (c *Client) Ping() error {
-	_, err := c.do("GET", "/api/server/ping", nil)
+	_, err := c.do("GET", "/api/users/me", nil)
 	return err
 }
 
 type ExploreField struct {
-	FieldName string        `json:"fieldName"`
-	Values    []FieldValue  `json:"values"`
+	FieldName string       `json:"fieldName"`
+	Values    []FieldValue `json:"values"`
 }
 
 type FieldValue struct {
@@ -199,7 +222,9 @@ func (c *Client) Explore() (ExploreData, error) {
 		return ExploreData{}, err
 	}
 	var fields []ExploreField
-	json.Unmarshal(data, &fields)
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return ExploreData{}, fmt.Errorf("parse explore: %w", err)
+	}
 
 	var result ExploreData
 	for _, f := range fields {
@@ -231,7 +256,9 @@ func (c *Client) ListAlbumNames() ([]string, error) {
 		return nil, err
 	}
 	var albums []albumResponse
-	json.Unmarshal(data, &albums)
+	if err := json.Unmarshal(data, &albums); err != nil {
+		return nil, fmt.Errorf("parse albums: %w", err)
+	}
 	names := make([]string, 0, len(albums))
 	for _, a := range albums {
 		names = append(names, a.Name)

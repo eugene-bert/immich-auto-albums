@@ -1,0 +1,4 @@
+Vendored third-party assets served by the web UI:
+
+- htmx.min.js — htmx 2.0.4, BSD-2-Clause, https://htmx.org
+- pico.min.css — Pico CSS 2.1.1, MIT, https://picocss.com

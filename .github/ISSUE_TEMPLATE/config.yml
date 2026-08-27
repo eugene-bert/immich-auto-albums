@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Immich
+    url: https://immich.app
+    about: Issues with Immich itself belong in the Immich project, not here.
+  - name: Security report
+    url: https://github.com/eugene-bert/immich-auto-albums/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.

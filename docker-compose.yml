@@ -1,13 +1,25 @@
 services:
   immich-auto-albums:
+    image: ghcr.io/eugene-bert/immich-auto-albums:latest
     build: .
     container_name: immich-auto-albums
     restart: unless-stopped
-    ports:
-      - "8095:8095"
+    user: "1000:1000"
     env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # Loopback only. The UI holds an Immich API key and has no auth unless
+      # UI_USER / UI_PASSWORD are set. Change to "8095:8095" only on a trusted LAN
+      # or behind a reverse proxy.
+      - "127.0.0.1:8095:8095"
     volumes:
       - ./data:/data
+    # Official Immich compose publishes this network as <project>_default.
+    # If `docker compose up` fails with "network immich_default not found":
+    #   docker network ls | grep immich
+    # then change the name below, or remove the networks: block and set
+    # IMMICH_URL=http://host.docker.internal:2283 in .env instead.
     networks:
       - immich_default
 

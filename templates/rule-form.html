@@ -9,7 +9,9 @@
     <form {{if .Rule.ID}}hx-put="/rules/{{.Rule.ID}}"{{else}}hx-post="/rules"{{end}}
           hx-target="{{if .Rule.ID}}#rule-{{.Rule.ID}}{{else}}#rules-list{{end}}"
           hx-swap="{{if .Rule.ID}}outerHTML{{else}}beforeend{{end}}"
-          hx-on::after-request="document.getElementById('rule-form-container').innerHTML=''">
+          hx-on::after-request="if(event.detail.successful) document.getElementById('rule-form-container').innerHTML=''"
+          hx-on::response-error="document.getElementById('form-error').textContent=event.detail.xhr.responseText">
+        <p id="form-error" class="rule-meta" style="color:var(--pico-del-color)"></p>
         <div class="grid">
             <label>Name <input type="text" name="name" value="{{.Rule.Name}}" required></label>
             <label>Album Name
@@ -17,6 +19,7 @@
                     <datalist id="albums">{{range .Explore.AlbumNames}}<option value="{{.}}">{{end}}</datalist>
                 </label>
         </div>
+        <p class="rule-meta">At least one filter is required. Filters combine with AND.</p>
         <details open>
             <summary>Camera Filters</summary>
             <div class="grid">

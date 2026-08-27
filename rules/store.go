@@ -2,36 +2,38 @@ package rules
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
 )
 
 type Rule struct {
-	ID          int64
-	Name        string
-	AlbumName   string
-	CameraMake  string
-	CameraModel string
-	LensModel   string
-	MediaType   string
-	City        string
-	State       string
-	Country     string
+	ID               int64
+	Name             string
+	AlbumName        string
+	CameraMake       string
+	CameraModel      string
+	LensModel        string
+	MediaType        string
+	City             string
+	State            string
+	Country          string
 	TakenAfter       string
 	TakenBefore      string
 	OriginalFileName string
 	Description      string
 	Interval         int
-	Enabled     bool
-	LastSync    time.Time
-	LastCount   int
-	TotalCount  int
-	CreatedAt   time.Time
+	Enabled          bool
+	LastSync         time.Time
+	LastCount        int
+	TotalCount       int
+	CreatedAt        time.Time
 }
 
-func (r Rule) FilterSummary() string {
+func (r Rule) filterParts() []string {
 	var parts []string
 	if r.CameraMake != "" || r.CameraModel != "" {
 		parts = append(parts, "camera:"+r.CameraMake+"/"+r.CameraModel)
@@ -63,14 +65,32 @@ func (r Rule) FilterSummary() string {
 	if r.Description != "" {
 		parts = append(parts, "desc:"+r.Description)
 	}
+	return parts
+}
+
+func (r Rule) HasFilters() bool {
+	return len(r.filterParts()) > 0
+}
+
+func (r Rule) Validate() error {
+	if strings.TrimSpace(r.Name) == "" {
+		return errors.New("name is required")
+	}
+	if strings.TrimSpace(r.AlbumName) == "" {
+		return errors.New("album name is required")
+	}
+	if !r.HasFilters() {
+		return errors.New("at least one filter is required")
+	}
+	return nil
+}
+
+func (r Rule) FilterSummary() string {
+	parts := r.filterParts()
 	if len(parts) == 0 {
 		return "no filters"
 	}
-	s := parts[0]
-	for _, p := range parts[1:] {
-		s += ", " + p
-	}
-	return s
+	return strings.Join(parts, ", ")
 }
 
 func (r Rule) LastSyncAgo() string {

@@ -1,6 +1,6 @@
 module github.com/eugene-bert/immich-auto-albums
 
-go 1.26.5
+go 1.27.0
 
 require modernc.org/sqlite v1.56.0
 

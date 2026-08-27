@@ -1,13 +1,22 @@
 package sync
 
 import (
+	"fmt"
 	"log"
+	gosync "sync"
 
 	"github.com/eugene-bert/immich-auto-albums/immich"
 	"github.com/eugene-bert/immich-auto-albums/rules"
 )
 
+var inFlight gosync.Map
+
 func Run(client *immich.Client, store *rules.Store, rule rules.Rule) error {
+	if _, loaded := inFlight.LoadOrStore(rule.ID, struct{}{}); loaded {
+		return fmt.Errorf("sync already running for rule %d", rule.ID)
+	}
+	defer inFlight.Delete(rule.ID)
+
 	assetIDs, err := client.SearchMetadata(rule)
 	if err != nil {
 		return err

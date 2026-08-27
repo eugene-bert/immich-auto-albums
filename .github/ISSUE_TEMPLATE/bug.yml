@@ -1,0 +1,34 @@
+name: Bug report
+description: Something is broken in immich-auto-albums
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste `.env` contents, API keys, or SQLite dumps.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected vs what you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Redact secrets. Paste `docker compose logs immich-auto-albums`.
+      render: text
+  - type: input
+    id: immich
+    attributes:
+      label: Immich version
+      placeholder: v1.135.3
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you run it
+      options:
+        - Pre-built GHCR image
+        - docker compose --build
+        - go run / local binary
