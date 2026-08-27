@@ -11,6 +11,9 @@ This project is unofficial and is not affiliated with Immich.
 
 ## How it works
 
+<img width="1427" height="603" alt="Screenshot 2026-08-27 at 16 47 44" src="https://github.com/user-attachments/assets/20abf200-b655-4b89-b7c5-4ee8ea33706f" />
+
+
 1. You create a rule in the web UI (camera, city, date range, …)
 2. On a timer — or when you click Sync — the app searches Immich for matching assets
 3. It creates the album if needed and adds any new matches
