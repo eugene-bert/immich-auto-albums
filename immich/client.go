@@ -78,41 +78,106 @@ func (c *Client) do(method, path string, body any) ([]byte, error) {
 }
 
 func (c *Client) SearchMetadata(rule rules.Rule) ([]string, error) {
-	filters := make(map[string]any)
-	if rule.CameraMake != "" {
-		filters["make"] = rule.CameraMake
+	filterSets := buildFilterSets(rule)
+
+	seen := make(map[string]bool)
+	var allIDs []string
+
+	for _, filters := range filterSets {
+		ids, err := c.searchWithFilters(filters)
+		if err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			if !seen[id] {
+				seen[id] = true
+				allIDs = append(allIDs, id)
+			}
+		}
 	}
-	if rule.CameraModel != "" {
-		filters["model"] = rule.CameraModel
-	}
-	if rule.LensModel != "" {
-		filters["lensModel"] = rule.LensModel
-	}
-	if rule.MediaType != "" {
-		filters["type"] = rule.MediaType
-	}
-	if rule.City != "" {
-		filters["city"] = rule.City
-	}
-	if rule.State != "" {
-		filters["state"] = rule.State
-	}
-	if rule.Country != "" {
-		filters["country"] = rule.Country
-	}
-	if rule.TakenAfter != "" {
-		filters["takenAfter"] = rule.TakenAfter
-	}
-	if rule.TakenBefore != "" {
-		filters["takenBefore"] = rule.TakenBefore
-	}
-	if rule.OriginalFileName != "" {
-		filters["originalFileName"] = rule.OriginalFileName
-	}
-	if rule.Description != "" {
-		filters["description"] = rule.Description
+	return allIDs, nil
+}
+
+func buildFilterSets(rule rules.Rule) []map[string]any {
+	multiFields := []struct {
+		value string
+		key   string
+	}{
+		{rule.CameraModel, "model"},
+		{rule.CameraMake, "make"},
+		{rule.City, "city"},
+		{rule.State, "state"},
+		{rule.Country, "country"},
 	}
 
+	combos := []map[string]any{{}}
+
+	for _, mf := range multiFields {
+		if mf.value == "" {
+			continue
+		}
+		values := splitComma(mf.value)
+		if len(values) <= 1 {
+			for _, c := range combos {
+				c[mf.key] = mf.value
+			}
+			continue
+		}
+		var expanded []map[string]any
+		for _, c := range combos {
+			for _, v := range values {
+				clone := cloneMap(c)
+				clone[mf.key] = v
+				expanded = append(expanded, clone)
+			}
+		}
+		combos = expanded
+	}
+
+	for _, c := range combos {
+		if rule.LensModel != "" {
+			c["lensModel"] = rule.LensModel
+		}
+		if rule.MediaType != "" {
+			c["type"] = rule.MediaType
+		}
+		if rule.TakenAfter != "" {
+			c["takenAfter"] = rule.TakenAfter
+		}
+		if rule.TakenBefore != "" {
+			c["takenBefore"] = rule.TakenBefore
+		}
+		if rule.OriginalFileName != "" {
+			c["originalFileName"] = rule.OriginalFileName
+		}
+		if rule.Description != "" {
+			c["description"] = rule.Description
+		}
+	}
+
+	return combos
+}
+
+func splitComma(s string) []string {
+	var result []string
+	for _, v := range strings.Split(s, ",") {
+		v = strings.TrimSpace(v)
+		if v != "" {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+func cloneMap(m map[string]any) map[string]any {
+	c := make(map[string]any, len(m))
+	for k, v := range m {
+		c[k] = v
+	}
+	return c
+}
+
+func (c *Client) searchWithFilters(filters map[string]any) ([]string, error) {
 	var allIDs []string
 	page := 1
 	for {
