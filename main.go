@@ -235,6 +235,7 @@ func parseForm(r *http.Request) (rules.Rule, error) {
 		TakenAfter:       r.FormValue("taken_after"),
 		TakenBefore:      r.FormValue("taken_before"),
 		OriginalFileName: r.FormValue("original_file_name"),
+		ExcludeFileName:  r.FormValue("exclude_file_name"),
 		Description:      r.FormValue("description"),
 		Interval:         interval,
 		Enabled:          r.FormValue("enabled") == "1",

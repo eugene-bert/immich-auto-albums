@@ -22,6 +22,14 @@ func Run(client *immich.Client, store *rules.Store, rule rules.Rule) error {
 		return err
 	}
 
+	if rule.ExcludeFileName != "" {
+		assetIDs, err = client.FilterExclude(assetIDs, rule.ExcludeFileName)
+		if err != nil {
+			return err
+		}
+		log.Printf("[%s] after exclusion filter: %d assets", rule.Name, len(assetIDs))
+	}
+
 	albumID, err := client.FindAlbum(rule.AlbumName)
 	if err != nil {
 		return err

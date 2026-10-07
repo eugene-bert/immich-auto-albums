@@ -331,6 +331,38 @@ func (c *Client) ListAlbumNames() ([]string, error) {
 	return names, nil
 }
 
+type assetDetail struct {
+	ID               string `json:"id"`
+	OriginalFileName string `json:"originalFileName"`
+}
+
+func (c *Client) FilterExclude(assetIDs []string, excludePattern string) ([]string, error) {
+	excludeParts := splitComma(excludePattern)
+	var filtered []string
+	for _, id := range assetIDs {
+		data, err := c.do("GET", "/api/assets/"+id, nil)
+		if err != nil {
+			return nil, err
+		}
+		var a assetDetail
+		if err := json.Unmarshal(data, &a); err != nil {
+			return nil, err
+		}
+		excluded := false
+		nameLower := strings.ToLower(a.OriginalFileName)
+		for _, pat := range excludeParts {
+			if strings.Contains(nameLower, strings.ToLower(pat)) {
+				excluded = true
+				break
+			}
+		}
+		if !excluded {
+			filtered = append(filtered, id)
+		}
+	}
+	return filtered, nil
+}
+
 func (c *Client) AddAssetsToAlbum(albumID string, assetIDs []string) error {
 	for i := 0; i < len(assetIDs); i += 500 {
 		end := i + 500
